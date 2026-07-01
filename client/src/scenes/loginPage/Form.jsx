@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { InputAdornment, IconButton } from "@mui/material";
+import LinearProgress from "@mui/material/LinearProgress";
+import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import {
   Box,
   Button,
@@ -7,28 +11,55 @@ import {
   Typography,
   useTheme,
   MenuItem,
-  InputBase,
-  Select,
-
 } from "@mui/material";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { AccountCircleOutlined } from "@mui/icons-material";
+import { DescriptionOutlined } from "@mui/icons-material";
+import { colombianCities } from "data/cities";
 import { Formik } from "formik";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setLogin } from "state";
 import Dropzone from "react-dropzone";
-import FlexBetween from "components/FlexBetween";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import RocketLaunchOutlinedIcon from "@mui/icons-material/RocketLaunchOutlined";
+import {
+  getPasswordStrength,
+  strengthConfig,
+  passwordRules,
+} from "utils/passwordStrength";
+
+const enableCV = process.env.REACT_APP_ENABLE_CV === "true";
 
 const registerSchema = yup.object().shape({
-  firstName: yup.string().required("required"),
-  lastName: yup.string().required("required"),
-  email: yup.string().email("invalid email").required("required"),
-  password: yup.string().required("required"),
+  firstName: yup.string().required("El nombre es obligatorio"),
+  lastName: yup.string().required("El apellido es obligatorio"),
+  email: yup
+    .string()
+    .email("Correo inválido")
+    .required("El correo es obligatorio"),
+
+  password: yup
+    .string()
+    .required("La contraseña es obligatoria")
+    .min(8, "Debe tener mínimo 8 caracteres")
+    .matches(/[A-Z]/, "Debe contener una mayúscula")
+    .matches(/[0-9]/, "Debe contener un número")
+    .matches(/[^A-Za-z0-9]/, "Debe contener un carácter especial"),
+
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("password")], "Las contraseñas no coinciden")
+    .required("Confirma la contraseña"),
+
   location: yup.string().required("required"),
   occupation: yup.string().required("required"),
-  picture: yup.string().required("required"),
-  document: yup.string().required("required"),
+  picture: yup.mixed().required("required"),
+  document: enableCV
+    ? yup.mixed().required("required")
+    : yup.mixed().nullable(),
   rol: yup.string().required("required"),
 });
 
@@ -44,9 +75,10 @@ const initialValuesRegister = {
   password: "",
   location: "",
   occupation: "",
-  picture: "",
-  document: "",
+  picture: null,
+  document: null,
   rol: "",
+  confirmPassword: "",
 };
 
 const initialValuesLogin = {
@@ -54,8 +86,7 @@ const initialValuesLogin = {
   password: "",
 };
 
-const Form = () => {
-  const [pageType, setPageType] = useState("login");
+const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
   const { palette } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -64,12 +95,12 @@ const Form = () => {
   const isRegister = pageType === "register";
   const theme = useTheme();
   const neutralLight = theme.palette.neutral.light;
-  const [error, setError] = useState(""); // Estado para almacenar el mensaje de error
-
-  //const [selectedRole, setSelectedRole] = useState({}); 
-
-
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
 
   const register = async (values, onSubmitProps) => {
     // esto permite enviar la informacion de la imagen y el documento
@@ -77,313 +108,1048 @@ const Form = () => {
     for (let value in values) {
       formData.append(value, values[value]);
     }
-    formData.append("picturePath", values.picture.name);
-    formData.append("cvPath", values.document.name)
 
     const savedUserResponse = await fetch(
       "http://localhost:3001/auth/register",
       {
         method: "POST",
         body: formData,
-      }
+      },
     );
     const savedUser = await savedUserResponse.json();
     onSubmitProps.resetForm();
 
-    if (savedUser) {
-      alert("¡Registro exitoso!");
-      setPageType("login");
+    if (savedUserResponse.ok) {
+      setSnackbarSeverity("success");
+
+      setSnackbarMessage("🎉 Cuenta creada correctamente");
+
+      setSnackbarOpen(true);
+
+      onSubmitProps.resetForm();
+
+      setTimeout(() => {
+        setSnackbarOpen(false);
+        setPageType("login");
+        setActiveStep(1);
+      }, 3000);
     }
   };
 
   const login = async (values, onSubmitProps) => {
-    const loggedInResponse = await fetch("http://localhost:3001/auth/login", {
+    const response = await fetch("http://localhost:3001/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(values),
     });
-    const loggedIn = await loggedInResponse.json();
+
+    const data = await response.json();
+
     onSubmitProps.resetForm();
-    if (loggedIn) {
+
+    if (response.ok) {
       dispatch(
         setLogin({
-          user: loggedIn.user,
-          token: loggedIn.token,
-        })
+          user: data.user,
+          token: data.token,
+        }),
       );
+
       navigate("/home");
-    } else{
 
-
-      setError("Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.");
-      
-      
-      setTimeout(()=>{
-        setError("")
-      }, 3000);
-
+      return;
     }
-    
-  };
 
+    if (response.status === 403) {
+      setEmailNotVerified(true);
+
+      setSnackbarSeverity("warning");
+      setSnackbarMessage(data.msg);
+      setSnackbarOpen(true);
+    } else {
+      setEmailNotVerified(false);
+
+      setSnackbarSeverity("error");
+      setSnackbarMessage(data.msg);
+      setSnackbarOpen(true);
+    }
+  };
 
   const handleFormSubmit = async (values, onSubmitProps) => {
     if (isLogin) await login(values, onSubmitProps);
     if (isRegister) await register(values, onSubmitProps);
   };
 
+  const handleResendVerification = async (email) => {
+    const response = await fetch(
+      "http://localhost:3001/auth/resend-verification",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      },
+    );
 
-  
+    const data = await response.json();
+
+    setSnackbarSeverity(response.ok ? "success" : "error");
+
+    setSnackbarMessage(data.msg);
+
+    setSnackbarOpen(true);
+  };
+
+  const nextStep = () => {
+    setActiveStep((prev) => prev + 1);
+  };
+
+  const previousStep = () => {
+    setActiveStep((prev) => prev - 1);
+  };
+
+  const wizardButtonStyle = {
+    minWidth: "120px",
+    height: "46px",
+    borderRadius: "999px",
+    textTransform: "none",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+    transition: "all .2s ease",
+  };
 
   return (
-    <Formik
-      onSubmit={handleFormSubmit}
-      initialValues={isLogin ? initialValuesLogin : initialValuesRegister}
-      validationSchema={isLogin ? loginSchema : registerSchema}
+    <Box>
+      <Formik
+        key={pageType}
+        enableReinitialize
+        initialValues={isLogin ? initialValuesLogin : initialValuesRegister}
+        validationSchema={isLogin ? loginSchema : registerSchema}
+        onSubmit={handleFormSubmit}
+      >
+        {({
+          values,
+          errors,
+          touched,
+          handleBlur,
+          handleChange,
+          handleSubmit,
+          setFieldValue,
+          resetForm,
+          validateForm,
+          setTouched,
+        }) => {
+          const passwordStrength = getPasswordStrength(values.password);
 
+          const currentStrength = strengthConfig[passwordStrength];
+          console.log(values);
 
-    >
-
-      {({
-        values,
-        errors,
-        touched,
-        handleBlur,
-        handleChange,
-        handleSubmit,
-        setFieldValue,
-        resetForm,
-      }) => (
-        <form onSubmit={handleSubmit}>
-          <Box
-            display="grid"
-            gap="30px"
-            gridTemplateColumns="repeat(4, minmax(0, 1fr))"
-            sx={{
-              "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={5000}
+            onClose={() => setSnackbarOpen(false)}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "center",
             }}
           >
-            {isRegister && (
-              <>
-                <TextField
-                  label="Nombres"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.firstName}
-                  name="firstName"
-                  error={
-                    Boolean(touched.firstName) && Boolean(errors.firstName)
-                  }
-                  helperText={touched.firstName && errors.firstName}
-                  sx={{ gridColumn: "span 2" }}
-                />
-                <TextField
-                  label="Apellidos"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.lastName}
-                  name="lastName"
-                  error={Boolean(touched.lastName) && Boolean(errors.lastName)}
-                  helperText={touched.lastName && errors.lastName}
-                  sx={{ gridColumn: "span 2" }}
-                />
-                <TextField
-                  label="Ubicacion"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.location}
-                  name="location"
-                  error={Boolean(touched.location) && Boolean(errors.location)}
-                  helperText={touched.location && errors.location}
-                  sx={{ gridColumn: "span 4" }}
-                />
-                <TextField
-                  label="Ocupacion"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.occupation}
-                  name="occupation"
-                  error={
-                    Boolean(touched.occupation) && Boolean(errors.occupation)
-                  }
-                  helperText={touched.occupation && errors.occupation}
-                  sx={{ gridColumn: "span 4" }}
-                />
-                {/* <TextField
-                  label="rol"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.rol}
-                  name="rol"
-                  error={
-                    Boolean(touched.rol) && Boolean(errors.rol)
-                  }
-                  helperText={touched.rol && errors.rol}
-                  sx={{ gridColumn: "span 4" }}
-                /> */}
+            <Alert
+              severity={snackbarSeverity}
+              variant="filled"
+              onClose={() => setSnackbarOpen(false)}
+              sx={{ width: "100%" }}
+            >
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>;
 
+          return (
+            <form onSubmit={handleSubmit}>
+              {isRegister && (
+                <Box mb={4}>
+                  <Typography variant="h6" fontWeight={600} mb={1}>
+                    Crear cuenta
+                  </Typography>
 
-                {/* ROL */}
-                <Select
-                  value={values.rol}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={touched.rol && Boolean(errors.rol)}
-                  helperText={touched.rol && errors.rol}
-                  name="rol"
-                  fullWidth
-                  sx={{ gridColumn: 'span 4' }}
-                >
-                  <MenuItem value="Mentor">Mentor</MenuItem>
-                  <MenuItem value="Emprendedor">Emprendedor</MenuItem>
-                </Select>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Paso {activeStep} de 3
+                  </Typography>
 
-
-                {/* IMAGEN */}
-
-
-                <Box
-                  gridColumn="span 4"
-                  border={`1px solid ${palette.neutral.medium}`}
-                  borderRadius="5px"
-                  p="1rem"
-                >
-
-
-                  <Dropzone
-                    acceptedFiles=".jpg,.jpeg,.png"
-                    multiple={false}
-                    onDrop={(acceptedFiles) =>
-                      setFieldValue("picture", acceptedFiles[0])
-                    }
+                  <Box
+                    width="100%"
+                    height="8px"
+                    borderRadius="999px"
+                    bgcolor={palette.neutral.light}
                   >
-                    {({ getRootProps, getInputProps }) => (
-                      <Box
-                        {...getRootProps()}
-                        border={`2px dashed ${palette.primary.main}`}
-                        p="1rem"
-                        sx={{ "&:hover": { cursor: "pointer" } }}
-                      >
-                        <input {...getInputProps()} />
-                        {!values.picture ? (
-                          <p>Añadir imagen</p>
-                        ) : (
-                          <FlexBetween>
-                            <Typography>{values.picture.name}</Typography>
-                            <EditOutlinedIcon />
-                          </FlexBetween>
+                    <Box
+                      width={`${(activeStep / 3) * 100}%`}
+                      height="100%"
+                      borderRadius="999px"
+                      bgcolor={palette.primary.main}
+                      sx={{
+                        transition: ".3s",
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+              <Box
+                display="grid"
+                gap="30px"
+                gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+                sx={{
+                  "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
+                }}
+              >
+                {isLogin && (
+                  <>
+                    <TextField
+                      label="Correo electrónico"
+                      name="email"
+                      value={values.email}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={Boolean(touched.email && errors.email)}
+                      helperText={touched.email && errors.email}
+                      sx={{ gridColumn: "span 4" }}
+                    />
+
+                    <TextField
+                      label="Contraseña"
+                      type={showPassword ? "text" : "password"}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      value={values.password}
+                      name="password"
+                      error={Boolean(touched.password && errors.password)}
+                      helperText={touched.password && errors.password}
+                      sx={{ gridColumn: "span 4" }}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              edge="end"
+                            >
+                              {showPassword ? (
+                                <VisibilityOffOutlined />
+                              ) : (
+                                <VisibilityOutlined />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </>
+                )}
+                {isRegister && (
+                  <>
+                    {isRegister && activeStep === 1 && (
+                      <>
+                        <TextField
+                          label="Nombres"
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          value={values.firstName}
+                          name="firstName"
+                          error={
+                            Boolean(touched.firstName) &&
+                            Boolean(errors.firstName)
+                          }
+                          helperText={touched.firstName && errors.firstName}
+                          sx={{ gridColumn: "span 2" }}
+                        />
+                        <TextField
+                          label="Apellidos"
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          value={values.lastName}
+                          name="lastName"
+                          error={
+                            Boolean(touched.lastName) &&
+                            Boolean(errors.lastName)
+                          }
+                          helperText={touched.lastName && errors.lastName}
+                          sx={{ gridColumn: "span 2" }}
+                        />
+
+                        <TextField
+                          label="Correo"
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          value={values.email}
+                          name="email"
+                          error={
+                            Boolean(touched.email) && Boolean(errors.email)
+                          }
+                          helperText={touched.email && errors.email}
+                          sx={{ gridColumn: "span 4" }}
+                        />
+
+                        {/* CONTRASEÑA */}
+
+                        <TextField
+                          label="Contraseña"
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          value={values.password}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(touched.password && errors.password)}
+                          helperText={touched.password && errors.password}
+                          sx={{ gridColumn: "span 4" }}
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onClick={() =>
+                                    setShowPassword((prev) => !prev)
+                                  }
+                                  edge="end"
+                                >
+                                  {showPassword ? (
+                                    <VisibilityOffOutlined />
+                                  ) : (
+                                    <VisibilityOutlined />
+                                  )}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+
+                        {/* CONFIRMAR CONTRASEÑA */}
+
+                        <TextField
+                          label="Confirmar contraseña"
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          value={values.confirmPassword}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(
+                            touched.confirmPassword && errors.confirmPassword,
+                          )}
+                          helperText={
+                            touched.confirmPassword && errors.confirmPassword
+                          }
+                          sx={{ gridColumn: "span 4" }}
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onClick={() =>
+                                    setShowConfirmPassword((prev) => !prev)
+                                  }
+                                  edge="end"
+                                >
+                                  {showConfirmPassword ? (
+                                    <VisibilityOffOutlined />
+                                  ) : (
+                                    <VisibilityOutlined />
+                                  )}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+
+                        {/* BARRA */}
+
+                        <Box gridColumn="span 4">
+                          <LinearProgress
+                            variant="determinate"
+                            value={currentStrength.value}
+                            color={currentStrength.color}
+                            sx={{
+                              mt: 1,
+                              height: 8,
+                              borderRadius: 999,
+                            }}
+                          />
+
+                          <Typography
+                            mt={1}
+                            fontWeight={600}
+                            color={`${currentStrength.color}.main`}
+                          >
+                            {currentStrength.text}
+                          </Typography>
+                        </Box>
+
+                        {/* REGLAS */}
+
+                        <Box
+                          gridColumn="span 4"
+                          display="flex"
+                          flexDirection="column"
+                          gap={0.5}
+                        >
+                          <Typography
+                            color={
+                              passwordRules.minLength(values.password)
+                                ? "success.main"
+                                : "text.secondary"
+                            }
+                          >
+                            {passwordRules.minLength(values.password)
+                              ? "✓"
+                              : "○"}{" "}
+                            Mínimo 8 caracteres
+                          </Typography>
+
+                          <Typography
+                            color={
+                              passwordRules.uppercase(values.password)
+                                ? "success.main"
+                                : "text.secondary"
+                            }
+                          >
+                            {passwordRules.uppercase(values.password)
+                              ? "✓"
+                              : "○"}{" "}
+                            Una mayúscula
+                          </Typography>
+
+                          <Typography
+                            color={
+                              passwordRules.number(values.password)
+                                ? "success.main"
+                                : "text.secondary"
+                            }
+                          >
+                            {passwordRules.number(values.password) ? "✓" : "○"}{" "}
+                            Un número
+                          </Typography>
+
+                          <Typography
+                            color={
+                              passwordRules.special(values.password)
+                                ? "success.main"
+                                : "text.secondary"
+                            }
+                          >
+                            {passwordRules.special(values.password) ? "✓" : "○"}{" "}
+                            Un carácter especial
+                          </Typography>
+                        </Box>
+
+                        {/* CONTRASEÑAS COINCIDEN */}
+
+                        {values.confirmPassword && (
+                          <Typography
+                            gridColumn="span 4"
+                            color={
+                              values.password === values.confirmPassword
+                                ? "success.main"
+                                : "error.main"
+                            }
+                          >
+                            {values.password === values.confirmPassword
+                              ? "✓ Las contraseñas coinciden"
+                              : "✗ Las contraseñas no coinciden"}
+                          </Typography>
                         )}
+                      </>
+                    )}
+
+                    {isRegister && activeStep === 2 && (
+                      <>
+                        <Box gridColumn="span 4">
+                          <Typography fontWeight={600} mb={2}>
+                            ¿Cómo quieres usar Mentify?
+                          </Typography>
+
+                          <Box
+                            display="grid"
+                            gridTemplateColumns="repeat(2,1fr)"
+                            gap={2}
+                          >
+                            {/* Mentor */}
+
+                            <Box
+                              onClick={() => setFieldValue("rol", "Mentor")}
+                              sx={{
+                                border:
+                                  values.rol === "Mentor"
+                                    ? `2px solid ${palette.primary.main}`
+                                    : "1px solid #ddd",
+
+                                borderRadius: "18px",
+
+                                p: 3,
+
+                                cursor: "pointer",
+
+                                transition: ".25s",
+
+                                backgroundColor:
+                                  values.rol === "Mentor"
+                                    ? palette.primary.light + "20"
+                                    : "#fff",
+
+                                "&:hover": {
+                                  transform: "translateY(-2px)",
+                                  boxShadow: "0 8px 24px rgba(25,118,210,.12)",
+                                },
+                              }}
+                            >
+                              <SchoolOutlinedIcon
+                                sx={{
+                                  fontSize: 42,
+                                  color: palette.primary.main,
+                                }}
+                              />
+
+                              <Typography mt={2} fontWeight={600}>
+                                Mentor
+                              </Typography>
+
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                mt={1}
+                              >
+                                Comparte tu experiencia ayudando a otros
+                                emprendedores.
+                              </Typography>
+                            </Box>
+
+                            {/* Emprendedor */}
+
+                            <Box
+                              onClick={() =>
+                                setFieldValue("rol", "Emprendedor")
+                              }
+                              sx={{
+                                border:
+                                  values.rol === "Emprendedor"
+                                    ? `2px solid ${palette.primary.main}`
+                                    : "1px solid #ddd",
+
+                                borderRadius: "18px",
+
+                                p: 3,
+
+                                cursor: "pointer",
+
+                                transition: ".25s",
+
+                                backgroundColor:
+                                  values.rol === "Emprendedor"
+                                    ? palette.primary.light + "20"
+                                    : "#fff",
+
+                                "&:hover": {
+                                  transform: "translateY(-2px)",
+                                  boxShadow: "0 8px 24px rgba(25,118,210,.12)",
+                                },
+                              }}
+                            >
+                              <RocketLaunchOutlinedIcon
+                                sx={{
+                                  fontSize: 42,
+                                  color: palette.primary.main,
+                                }}
+                              />
+
+                              <Typography mt={2} fontWeight={600}>
+                                Emprendedor
+                              </Typography>
+
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                mt={1}
+                              >
+                                Encuentra mentores para impulsar tu proyecto.
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          {touched.rol && errors.rol && (
+                            <Typography color="error" mt={1}>
+                              {errors.rol}
+                            </Typography>
+                          )}
+                        </Box>
+
+                        <TextField
+                          label="¿A qué te dedicas?"
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          value={values.occupation}
+                          name="occupation"
+                          error={Boolean(
+                            touched.occupation && errors.occupation,
+                          )}
+                          helperText={touched.occupation && errors.occupation}
+                          sx={{ gridColumn: "span 4" }}
+                        />
+
+                        <TextField
+                          select
+                          label="Ciudad"
+                          name="location"
+                          value={values.location}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(touched.location && errors.location)}
+                          helperText={touched.location && errors.location}
+                          sx={{ gridColumn: "span 4" }}
+                        >
+                          {colombianCities.map((city) => (
+                            <MenuItem key={city} value={city}>
+                              {city}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </>
+                    )}
+
+                    {isRegister && activeStep === 3 && (
+                      <Box
+                        gridColumn="span 4"
+                        display="flex"
+                        flexDirection="column"
+                        gap={3}
+                      >
+                        {/* HEADER */}
+                        <Box textAlign="center">
+                          <Typography variant="h5" fontWeight={700}>
+                            Personaliza tu perfil
+                          </Typography>
+
+                          <Typography color="text.secondary" mt={1}>
+                            Solo falta un paso para comenzar en Mentify.
+                          </Typography>
+                        </Box>
+
+                        {/* FOTO */}
+                        <Dropzone
+                          acceptedFiles=".jpg,.jpeg,.png"
+                          multiple={false}
+                          onDrop={(acceptedFiles) =>
+                            setFieldValue("picture", acceptedFiles[0])
+                          }
+                        >
+                          {({ getRootProps, getInputProps }) => (
+                            <Box
+                              {...getRootProps()}
+                              sx={{
+                                border: `2px dashed ${palette.primary.main}`,
+                                borderRadius: "22px",
+                                p: 4,
+                                cursor: "pointer",
+                                textAlign: "center",
+                                transition: ".25s",
+
+                                "&:hover": {
+                                  backgroundColor: palette.primary.light + "15",
+                                  transform: "translateY(-2px)",
+                                },
+                              }}
+                            >
+                              <input {...getInputProps()} />
+
+                              <Typography
+                                fontWeight={600}
+                                color="primary"
+                                mb={3}
+                              >
+                                Foto de perfil
+                              </Typography>
+
+                              {values.picture ? (
+                                <>
+                                  <Box
+                                    component="img"
+                                    src={URL.createObjectURL(values.picture)}
+                                    sx={{
+                                      width: 120,
+                                      height: 120,
+                                      borderRadius: "50%",
+                                      objectFit: "cover",
+                                      mx: "auto",
+                                      mb: 2,
+                                      border: `4px solid ${palette.primary.light}`,
+                                    }}
+                                  />
+
+                                  <Typography fontWeight={600}>
+                                    {values.picture.name}
+                                  </Typography>
+
+                                  <Typography color="success.main" mt={1}>
+                                    ✓ Imagen cargada
+                                  </Typography>
+
+                                  <Typography
+                                    variant="body2"
+                                    color="primary"
+                                    mt={1}
+                                  >
+                                    Haz clic para cambiarla
+                                  </Typography>
+                                </>
+                              ) : (
+                                <>
+                                  <AccountCircleOutlined
+                                    sx={{
+                                      fontSize: 90,
+                                      color: palette.primary.main,
+                                    }}
+                                  />
+
+                                  <Typography fontWeight={600} mt={2}>
+                                    Haz clic para subir tu foto
+                                  </Typography>
+
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    mt={1}
+                                  >
+                                    JPG o PNG • Máx. 5 MB
+                                  </Typography>
+                                </>
+                              )}
+                            </Box>
+                          )}
+                        </Dropzone>
+
+                        {/* DOCUMENTO */}
+                        {process.env.REACT_APP_ENABLE_CV === "true" && (
+                          <Dropzone
+                            acceptedFiles=".pdf,.doc,.docx"
+                            multiple={false}
+                            onDrop={(acceptedFiles) =>
+                              setFieldValue("document", acceptedFiles[0])
+                            }
+                          >
+                            {({ getRootProps, getInputProps }) => (
+                              <Box
+                                {...getRootProps()}
+                                sx={{
+                                  border: `2px dashed ${palette.primary.main}`,
+                                  borderRadius: "22px",
+                                  p: 4,
+                                  cursor: "pointer",
+                                  textAlign: "center",
+                                  transition: ".25s",
+
+                                  "&:hover": {
+                                    backgroundColor:
+                                      palette.primary.light + "15",
+                                    transform: "translateY(-2px)",
+                                  },
+                                }}
+                              >
+                                <input {...getInputProps()} />
+
+                                <Typography
+                                  fontWeight={600}
+                                  color="primary"
+                                  mb={3}
+                                >
+                                  {values.rol === "Mentor"
+                                    ? "Hoja de vida"
+                                    : "Presentación del emprendimiento"}
+                                </Typography>
+
+                                {values.document ? (
+                                  <>
+                                    <DescriptionOutlined
+                                      sx={{
+                                        fontSize: 70,
+                                        color: palette.primary.main,
+                                        mb: 2,
+                                      }}
+                                    />
+
+                                    <Typography fontWeight={600}>
+                                      {values.document.name}
+                                    </Typography>
+
+                                    <Typography color="success.main" mt={1}>
+                                      ✓ Archivo cargado
+                                    </Typography>
+
+                                    <Typography
+                                      variant="body2"
+                                      color="primary"
+                                      mt={1}
+                                    >
+                                      Haz clic para reemplazarlo
+                                    </Typography>
+                                  </>
+                                ) : (
+                                  <>
+                                    <DescriptionOutlined
+                                      sx={{
+                                        fontSize: 70,
+                                        color: palette.primary.main,
+                                      }}
+                                    />
+
+                                    <Typography fontWeight={600} mt={2}>
+                                      {values.rol === "Mentor"
+                                        ? "Sube tu hoja de vida"
+                                        : "Cuéntanos sobre tu emprendimiento"}
+                                    </Typography>
+
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      mt={1}
+                                    >
+                                      {values.rol === "Mentor"
+                                        ? "PDF • DOC • DOCX"
+                                        : "PDF, DOC o DOCX"}
+                                    </Typography>
+                                  </>
+                                )}
+                              </Box>
+                            )}
+                          </Dropzone>
+                        )}
+
+                        <Typography
+                          textAlign="center"
+                          color="text.secondary"
+                          fontSize="0.85rem"
+                        >
+                          Podrás cambiar esta información más adelante desde tu
+                          perfil.
+                        </Typography>
                       </Box>
                     )}
-                  </Dropzone>
+                  </>
+                )}
+              </Box>
 
-                </Box>
+              {/* BUTTONS */}
+              <Box>
+                <Box mt={4}>
+                  {isRegister ? (
+                    <Box display="flex" justifyContent="space-between" mt={5}>
+                      {activeStep > 1 ? (
+                        <Button
+                          variant="outlined"
+                          onClick={previousStep}
+                          sx={{
+                            ...wizardButtonStyle,
+                            borderColor: palette.primary.main,
+                            color: palette.primary.main,
 
-                {/* FILE */}
+                            "&:hover": {
+                              backgroundColor: palette.primary.light + "15",
+                              borderColor: palette.primary.main,
+                            },
+                          }}
+                        >
+                          Atrás
+                        </Button>
+                      ) : (
+                        <Box width="100px" />
+                      )}
+                      {activeStep < 3 ? (
+                        <Button
+                          variant="contained"
+                          onClick={async () => {
+                            const errors = await validateForm();
 
+                            if (activeStep === 1) {
+                              setTouched({
+                                firstName: true,
+                                lastName: true,
+                                email: true,
+                                password: true,
+                                confirmPassword: true,
+                              });
 
+                              if (
+                                !errors.firstName &&
+                                !errors.lastName &&
+                                !errors.email &&
+                                !errors.password &&
+                                !errors.confirmPassword
+                              ) {
+                                nextStep();
+                              }
+                            }
 
-                <Box gridColumn="span 4"
-                  border={`1px solid ${palette.neutral.medium}`}
-                  borderRadius="5px"
-                  p="1rem">
+                            if (activeStep === 2) {
+                              setTouched({
+                                rol: true,
+                                occupation: true,
+                                location: true,
+                              });
 
-                  <Typography sx={{
-                
-                color: palette.primary.main,
-                
-              }}>Si eres un mentor añade tu hoja de vida, si eres un emprendedor añade la descripcion de tu emprendimiento</Typography>
-                  <Dropzone
-                    acceptedFiles={null}
-                    multiple={false}
-                    onDrop={(acceptedFiles) =>
-                      setFieldValue("document", acceptedFiles[0])
-                    }
-                  >
-                    {({ getRootProps, getInputProps }) => (
-                      <Box
-                        {...getRootProps()}
-                        border={`2px dashed ${palette.primary.main}`}
-                        p="1rem"
-                        sx={{ "&:hover": { cursor: "pointer" } }}
+                              if (
+                                !errors.rol &&
+                                !errors.occupation &&
+                                !errors.location
+                              ) {
+                                nextStep();
+                              }
+                            }
+                            if (activeStep === 3) {
+                              setTouched({
+                                picture: true,
+                                ...(enableCV && { document: true }),
+                              });
+                              if (
+                                !errors.picture &&
+                                (!enableCV || !errors.document)
+                              ) {
+                                handleSubmit();
+                              }
+                            }
+                          }}
+                          sx={{
+                            ...wizardButtonStyle,
+                            backgroundColor: palette.primary.main,
+                            color: "#fff",
+                            boxShadow: "none",
+
+                            "&:hover": {
+                              backgroundColor: palette.primary.main,
+                              transform: "translateY(-1px)",
+                              boxShadow: "0 8px 24px rgba(25,118,210,.25)",
+                            },
+
+                            "&:active": {
+                              transform: "translateY(0)",
+                              boxShadow: "0 3px 10px rgba(25,118,210,.18)",
+                            },
+                          }}
+                        >
+                          Siguiente
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          type="submit"
+                          sx={{
+                            ...wizardButtonStyle,
+                            backgroundColor: palette.primary.main,
+                            color: "#fff",
+                            boxShadow: "none",
+
+                            "&:hover": {
+                              backgroundColor: palette.primary.main,
+                              transform: "translateY(-1px)",
+                              boxShadow: "0 8px 24px rgba(25,118,210,.25)",
+                            },
+
+                            "&:active": {
+                              transform: "translateY(0)",
+                              boxShadow: "0 3px 10px rgba(25,118,210,.18)",
+                            },
+                          }}
+                        >
+                          Crear cuenta
+                        </Button>
+                      )}
+                    </Box>
+                  ) : (
+                    <Button
+                      fullWidth
+                      type="submit"
+                      sx={{
+                        mt: 2,
+                        p: "1rem",
+                        backgroundColor: palette.primary.main,
+                        color: palette.background.alt,
+                      }}
+                    >
+                      Iniciar sesión
+                    </Button>
+                  )}
+                  {process.env.REACT_APP_EMAIL_VERIFICATION === "true" &&
+                    emailNotVerified && (
+                      <Alert
+                        severity="warning"
+                        sx={{
+                          mt: 2,
+                          borderRadius: 3,
+                        }}
                       >
-                        <input {...getInputProps()} />
-                        {!values.document ? (
-                          <p>Añadir documento</p>
-                        ) : (
-                          <FlexBetween>
-                            <Typography>{values.document.name}</Typography>
-                            <EditOutlinedIcon />
-                          </FlexBetween>
-                        )}
-                      </Box>
+                        <Typography fontWeight={600}>
+                          Tu cuenta aún no ha sido verificada.
+                        </Typography>
+
+                        {/* <Typography variant="body2" sx={{ mt: 1 }}>
+                          Revisa tu bandeja de entrada y verifica tu correo.
+                        </Typography> */}
+
+                        <Button
+                          size="small"
+                          sx={{ mt: 1 }}
+                          onClick={() => handleResendVerification(values.email)}
+                        >
+                          Reenviar correo
+                        </Button>
+                      </Alert>
                     )}
-                  </Dropzone>
                 </Box>
-              </>
-            )}
-
-            <TextField
-              label="Correo"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.email}
-              name="email"
-              error={Boolean(touched.email) && Boolean(errors.email)}
-              helperText={touched.email && errors.email}
-              sx={{ gridColumn: "span 4" }}
-            />
-            <TextField
-              label="Contraseña"
-              type="password"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.password}
-              name="password"
-              error={Boolean(touched.password) && Boolean(errors.password)}
-              helperText={touched.password && errors.password}
-              sx={{ gridColumn: "span 4" }}
-            />
-          </Box>
-
-          {/* BUTTONS */}
-          <Box>
-            <Button
-              fullWidth
-              type="submit"
-              sx={{
-                m: "2rem 0",
-                p: "1rem",
-                backgroundColor: palette.primary.main,
-                color: palette.background.alt,
-                "&:hover": { color: palette.primary.main },
-              }}
-            >
-              {isLogin ? "INICIA SESION" : "REGISTRATE"}
-            </Button>
-            <Typography
-              onClick={() => {
-                setPageType(isLogin ? "register" : "login");
-                resetForm();
-              }}
-              sx={{
-                textDecoration: "underline",
-                color: palette.primary.main,
-                "&:hover": {
-                  cursor: "pointer",
-                  color: palette.primary.light,
-                },
-              }}
-            >
-              {isLogin
-                ? "¿No tienes una cuenta? Registrate"
-                : "¿Ya tienes una cuenta? Ingresa"}
-            </Typography>
-          </Box>
-          {error && <div style={{ color: "red" }}>{error}</div>}
-        </form>
-      )}
-    </Formik>
+                <Typography
+                  onClick={() => {
+                    setPageType(isLogin ? "register" : "login");
+                    setActiveStep(1);
+                    setEmailNotVerified(false); // opcional
+                    setSnackbarOpen(false);
+                    setSnackbarMessage("");
+                  }}
+                  sx={{
+                    mt: 4,
+                    textAlign: "center",
+                    textDecoration: "none",
+                    color: palette.primary.main,
+                    fontWeight: 500,
+                    "&:hover": {
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      color: palette.primary.dark,
+                    },
+                  }}
+                >
+                  {isLogin
+                    ? "¿No tienes una cuenta? Regístrate"
+                    : "¿Ya tienes una cuenta? Inicia sesión"}
+                </Typography>
+              </Box>
+            </form>
+          );
+        }}
+      </Formik>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <Alert
+          severity={snackbarSeverity}
+          variant="filled"
+          onClose={() => setSnackbarOpen(false)}
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+          }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

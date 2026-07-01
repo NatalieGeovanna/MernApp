@@ -33,7 +33,7 @@ const UserSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
-    
+
     cvPath: {
       type: String,
       default: "",
@@ -44,19 +44,27 @@ const UserSchema = new mongoose.Schema(
       required: true,
     },
 
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+
+    verificationToken: {
+      type: String,
+    },
+
+    verificationExpires: {
+      type: Date,
+    },
+
     location: String,
     occupation: String,
     viewedProfile: Number,
     impressions: Number,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
-
 
 const User = mongoose.model("User", UserSchema);
 
 export default User;
-
-
-
-

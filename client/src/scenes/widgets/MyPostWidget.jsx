@@ -38,12 +38,12 @@ const MyPostWidget = ({ picturePath }) => {
   const medium = palette.neutral.medium;
 
   const handlePost = async () => {
+    if (!post.trim() && !image) return;
     const formData = new FormData();
     formData.append("userId", _id);
     formData.append("description", post);
     if (image) {
       formData.append("picture", image);
-      formData.append("picturePath", image.name);
     }
 
     const response = await fetch(`http://localhost:3001/posts`, {
@@ -62,7 +62,7 @@ const MyPostWidget = ({ picturePath }) => {
       <FlexBetween gap="1.5rem">
         <UserImage image={picturePath} />
         <InputBase
-          placeholder="¿cómo va tu dia?"
+          placeholder="¿Qué quieres compartir hoy?"
           onChange={(e) => setPost(e.target.value)}
           value={post}
           sx={{
@@ -96,11 +96,17 @@ const MyPostWidget = ({ picturePath }) => {
                 >
                   <input {...getInputProps()} />
                   {!image ? (
-                    <p>Add Image Here</p>
+                    <Typography color="text.secondary">
+                      Arrastra una imagen aquí o haz clic para seleccionarla
+                    </Typography>
                   ) : (
                     <FlexBetween>
-                      <Typography>{image.name}</Typography>
-                      <EditOutlined />
+                      <FlexBetween gap={1}>
+                        <ImageOutlined color="primary" />
+                        <Typography>{image.name}</Typography>
+                      </FlexBetween>
+
+                      <EditOutlined color="action" />
                     </FlexBetween>
                   )}
                 </Box>
@@ -115,6 +121,19 @@ const MyPostWidget = ({ picturePath }) => {
               </FlexBetween>
             )}
           </Dropzone>
+          {image && (
+            <Box
+              component="img"
+              src={URL.createObjectURL(image)}
+              sx={{
+                width: "100%",
+                maxHeight: 350,
+                objectFit: "cover",
+                borderRadius: 3,
+                mt: 2,
+              }}
+            />
+          )}
         </Box>
       )}
 
@@ -132,9 +151,7 @@ const MyPostWidget = ({ picturePath }) => {
         </FlexBetween>
 
         {isNonMobileScreens ? (
-          <>
-            
-          </>
+          <></>
         ) : (
           <FlexBetween gap="0.25rem">
             <MoreHorizOutlined sx={{ color: mediumMain }} />
@@ -142,12 +159,23 @@ const MyPostWidget = ({ picturePath }) => {
         )}
 
         <Button
-          disabled={!post}
+          disabled={!post.trim() && !image}
           onClick={handlePost}
           sx={{
             color: palette.background.alt,
             backgroundColor: palette.primary.main,
-            borderRadius: "3rem",
+            px: 3,
+            py: 1,
+            minWidth: 110,
+            borderRadius: "999px",
+            textTransform: "none",
+            fontWeight: 600,
+            boxShadow: "none",
+
+            "&:hover": {
+              boxShadow: "0 6px 18px rgba(25,118,210,.25)",
+              transform: "translateY(-1px)",
+            },
           }}
         >
           POST

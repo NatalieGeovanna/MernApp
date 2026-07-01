@@ -1,14 +1,18 @@
 import { Box } from "@mui/material";
+import { getImageUrl } from "utils/getImageUrl";
 
 const UserImage = ({ image, size = "60px" }) => {
   return (
     <Box width={size} height={size}>
       <img
-        style={{ objectFit: "cover", borderRadius: "50%" }}
+        src={getImageUrl(image)}
+        alt="user"
         width={size}
         height={size}
-        alt="user"
-        src={`http://localhost:3001/assets/${image}`}
+        style={{
+          objectFit: "cover",
+          borderRadius: "50%",
+        }}
       />
     </Box>
   );

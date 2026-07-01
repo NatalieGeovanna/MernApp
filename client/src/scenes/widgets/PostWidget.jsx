@@ -1,13 +1,11 @@
-import {
-  FavoriteBorderOutlined,
-  FavoriteOutlined,
-} from "@mui/icons-material";
-import { Box, Divider, IconButton, Typography, useTheme } from "@mui/material";
+import { FavoriteBorderOutlined, FavoriteOutlined } from "@mui/icons-material";
+import { Divider, IconButton, Typography, useTheme } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
 import { useDispatch, useSelector } from "react-redux";
 import { setPost } from "state";
+import { getImageUrl } from "utils/getImageUrl";
 
 const PostWidget = ({
   postId,
@@ -17,10 +15,10 @@ const PostWidget = ({
   location,
   picturePath,
   userPicturePath,
+  createdAt,
+
   likes,
-  
 }) => {
-  
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
   const loggedInUserId = useSelector((state) => state.user._id);
@@ -40,6 +38,7 @@ const PostWidget = ({
       },
       body: JSON.stringify({ userId: loggedInUserId }),
     });
+
     const updatedPost = await response.json();
     dispatch(setPost({ post: updatedPost }));
   };
@@ -51,22 +50,26 @@ const PostWidget = ({
         name={name}
         subtitle={location}
         userPicturePath={userPicturePath}
+        createdAt={createdAt}
       />
-      <Typography color={main} sx={{ mt: "1rem" }}>
+
+      <Typography color={main} sx={{ mt: "1.5rem" }}>
         {description}
       </Typography>
+
       {picturePath && (
         <img
           width="100%"
           height="auto"
           alt="post"
-          style={{ borderRadius: "0.75rem", marginTop: "0.75rem" }}
-          src={`http://localhost:3001/assets/${picturePath}`}
+          style={{ borderRadius: "0rem", marginTop: "0.75rem" }}
+          src={getImageUrl(picturePath)}
         />
       )}
+      <Divider sx={{ my: "1rem" }} />
       <FlexBetween mt="0.25rem">
         <FlexBetween gap="1rem">
-          <FlexBetween gap="0.3rem">
+          <FlexBetween gap="0.5rem">
             <IconButton onClick={patchLike}>
               {isLiked ? (
                 <FavoriteOutlined sx={{ color: primary }} />

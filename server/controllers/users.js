@@ -1,27 +1,24 @@
-import User from "../models/User.js"
-
+import User from "../models/User.js";
 
 /* READ */
 
-export const getUsers = async(req, res) =>{
+export const getUsers = async (req, res) => {
   try {
     const users = await User.find({});
     res.status(200).json(users);
   } catch (err) {
-    res.status(404).json({message: err.message})
+    res.status(404).json({ message: err.message });
   }
-  
 };
 
-export const getUser = async(req, res) =>{
-    try {
-        const {id} = req.params;
-        const user = await User.findById(id);
-        res.status(200).json(user);
-    } catch (err) {
-        res.status(404).json({message: err.message})
-        
-    }
+export const getUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
 };
 
 export const getUserFriends = async (req, res) => {
@@ -30,12 +27,28 @@ export const getUserFriends = async (req, res) => {
     const user = await User.findById(id);
 
     const friends = await Promise.all(
-      user.friends.map((id) => User.findById(id))
+      user.friends.map((id) => User.findById(id)),
     );
     const formattedFriends = friends.map(
-      ({ _id, firstName, lastName, occupation, location, picturePath, cvPath }) => {
-        return { _id, firstName, lastName, occupation, location, picturePath, cvPath};
-      }
+      ({
+        _id,
+        firstName,
+        lastName,
+        occupation,
+        location,
+        picturePath,
+        cvPath,
+      }) => {
+        return {
+          _id,
+          firstName,
+          lastName,
+          occupation,
+          location,
+          picturePath,
+          cvPath,
+        };
+      },
     );
     res.status(200).json(formattedFriends);
   } catch (err) {
@@ -52,7 +65,9 @@ export const addRemoveFriend = async (req, res) => {
 
     if (user.friends.includes(friendId)) {
       user.friends = user.friends.filter((id) => id !== friendId);
-      friend.friends = friend.friends.filter((id) => id !== id);
+      friend.friends = friend.friends.filter(
+        (friendUserId) => friendUserId !== id,
+      );
     } else {
       user.friends.push(friendId);
       friend.friends.push(id);
@@ -61,12 +76,28 @@ export const addRemoveFriend = async (req, res) => {
     await friend.save();
 
     const friends = await Promise.all(
-      user.friends.map((id) => User.findById(id))
+      user.friends.map((id) => User.findById(id)),
     );
     const formattedFriends = friends.map(
-      ({ _id, firstName, lastName, occupation, location, picturePath, cvPath }) => {
-        return { _id, firstName, lastName, occupation, location, picturePath, cvPath };
-      }
+      ({
+        _id,
+        firstName,
+        lastName,
+        occupation,
+        location,
+        picturePath,
+        cvPath,
+      }) => {
+        return {
+          _id,
+          firstName,
+          lastName,
+          occupation,
+          location,
+          picturePath,
+          cvPath,
+        };
+      },
     );
 
     res.status(200).json(formattedFriends);

@@ -2,14 +2,18 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setPosts } from "state";
 import PostWidget from "./PostWidget";
-
+import { Box, Typography } from "@mui/material";
+import FeedOutlinedIcon from "@mui/icons-material/FeedOutlined";
 const PostsWidget = ({ userId, isProfile = false }) => {
+  const currentUserId = useSelector((state) => state.user._id);
+  const isOwnProfile = currentUserId === userId;
   const dispatch = useDispatch();
   const posts = useSelector((state) => state.posts);
   const token = useSelector((state) => state.token);
 
   const getPosts = async () => {
-    const response = await fetch("http://localhost:3001/posts", {
+    console.log("Llamando al feed...");
+    const response = await fetch(`http://localhost:3001/posts/feed/${userId}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -23,8 +27,9 @@ const PostsWidget = ({ userId, isProfile = false }) => {
       {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
-      }
+      },
     );
+    console.log(response.status);
     const data = await response.json();
     dispatch(setPosts({ posts: data }));
   };
@@ -36,6 +41,40 @@ const PostsWidget = ({ userId, isProfile = false }) => {
       getPosts();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (posts.length === 0) {
+    return (
+      <Box
+        mt="2rem"
+        p="3rem"
+        textAlign="center"
+        borderRadius="1rem"
+        bgcolor="background.paper"
+        border="1px solid"
+        borderColor="divider"
+      >
+        <FeedOutlinedIcon
+          sx={{
+            fontSize: 55,
+            color: "primary.main",
+            mb: 2,
+          }}
+        />
+
+        <Typography variant="h6" fontWeight={600}>
+          {isOwnProfile
+            ? "Todavía no has publicado nada"
+            : "Esta persona aún no ha publicado"}
+        </Typography>
+
+        <Typography color="text.secondary" mt={1}>
+          {isOwnProfile
+            ? "Comparte tu primera publicación para empezar a conectar con la comunidad."
+            : "Cuando publique contenido, aparecerá aquí."}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -51,6 +90,7 @@ const PostsWidget = ({ userId, isProfile = false }) => {
           userPicturePath,
           likes,
           comments,
+          createdAt,
         }) => (
           <PostWidget
             key={_id}
@@ -63,8 +103,9 @@ const PostsWidget = ({ userId, isProfile = false }) => {
             userPicturePath={userPicturePath}
             likes={likes}
             comments={comments}
+            createdAt={createdAt}
           />
-        )
+        ),
       )}
     </>
   );

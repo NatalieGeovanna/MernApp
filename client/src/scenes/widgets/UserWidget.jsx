@@ -10,14 +10,16 @@ import UserImage from "components/UserImage";
 import UserFile from "components/UserFile";
 import FlexBetween from "components/FlexBetween";
 import WidgetWrapper from "components/WidgetWrapper";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-
-
+import { IconButton } from "@mui/material";
+import { PersonAddOutlined, PersonRemoveOutlined } from "@mui/icons-material";
+import { setFriends } from "state";
 
 const UserWidget = ({ userId, picturePath, cvPath }) => {
+  const { _id } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const [user, setUser] = useState(null);
   const { palette } = useTheme();
   const navigate = useNavigate();
@@ -26,8 +28,8 @@ const UserWidget = ({ userId, picturePath, cvPath }) => {
   const medium = palette.neutral.medium;
   const main = palette.neutral.main;
   const currentUserId = useSelector((state) => state.user._id); // Obtener el userId del usuario logueado
-
-
+  const isOwnProfile = currentUserId === userId;
+  const loggedInUserFriends = useSelector((state) => state.user.friends);
 
   const getUser = async () => {
     const response = await fetch(`http://localhost:3001/users/${userId}`, {
@@ -40,27 +42,38 @@ const UserWidget = ({ userId, picturePath, cvPath }) => {
 
   useEffect(() => {
     getUser();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   if (!user) {
     return null;
   }
 
-  const {
-    firstName,
-    lastName,
-    location,
-    occupation,
-    rol,
-    viewedProfile,
-    impressions,
-    friends,
-
-  } = user;
+  const { firstName, lastName, location, occupation, rol } = user;
+  const profileFriendCount = user.friends.length;
+  const isFriend = loggedInUserFriends.some((friend) => friend._id === userId);
+  console.log("loggedInUserFriends", loggedInUserFriends);
+  console.log(loggedInUserFriends.map((friend) => friend._id));
+  console.log("Perfil:", userId);
 
   const handleClick = () => {
     // Redirige a la página de citas con el `userId` como argumento
     navigate(`/appointments?receiver=${userId}`);
+  };
+
+  const patchFriend = async () => {
+    const response = await fetch(
+      `http://localhost:3001/users/${_id}/${userId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const data = await response.json();
+    dispatch(setFriends({ friends: data }));
+    await getUser();
   };
 
   return (
@@ -87,10 +100,36 @@ const UserWidget = ({ userId, picturePath, cvPath }) => {
             >
               {firstName} {lastName}
             </Typography>
-            <Typography color={medium}>{friends.length} friends</Typography>
+            <Typography color={medium}>
+              {user.friends.length} friends
+            </Typography>
           </Box>
         </FlexBetween>
-        <ManageAccountsOutlined />
+
+        {isOwnProfile ? (
+          <IconButton
+            sx={{
+              backgroundColor: palette.primary.light,
+              p: "0.6rem",
+            }}
+          >
+            <ManageAccountsOutlined sx={{ color: palette.primary.dark }} />
+          </IconButton>
+        ) : (
+          <IconButton
+            onClick={patchFriend}
+            sx={{
+              backgroundColor: palette.primary.light,
+              p: "0.6rem",
+            }}
+          >
+            {isFriend ? (
+              <PersonRemoveOutlined sx={{ color: palette.primary.dark }} />
+            ) : (
+              <PersonAddOutlined sx={{ color: palette.primary.dark }} />
+            )}
+          </IconButton>
+        )}
       </FlexBetween>
 
       <Divider />
@@ -109,45 +148,20 @@ const UserWidget = ({ userId, picturePath, cvPath }) => {
           <WorkOutlineOutlined fontSize="large" sx={{ color: main }} />
           <Typography color={medium}>{occupation}</Typography>
         </Box>
-        <Box display="flex" alignItems="center" gap="1rem" mb="0.5rem">
-        <ArticleOutlined fontSize="large" sx={{ color: main }}/>
+        {/* <Box display="flex" alignItems="center" gap="1rem" mb="0.5rem">
+          <ArticleOutlined fontSize="large" sx={{ color: main }} />
           <UserFile file={cvPath} rol={rol} />
-        </Box>
+        </Box> */}
       </Box>
 
       <Divider />
-
-      {/* THIRD ROW */}
-      <Box p="1rem 0">
-        <FlexBetween mb="0.5rem">
-          <Typography color={medium}>Who's viewed your profile</Typography>
-          <Typography color={main} fontWeight="500">
-            {viewedProfile}
-          </Typography>
-        </FlexBetween>
-        <FlexBetween>
-          <Typography color={medium}>Impressions of your post</Typography>
-          <Typography color={main} fontWeight="500">
-            {impressions}
-          </Typography>
-        </FlexBetween>
-      </Box>
-
-      <Divider />
-
 
       {/* OCULTAR BOTÓN SI EL PERFIL MOSTRADO ES EL DEL USUARIO LOGUEADO */}
       {currentUserId !== userId && user.rol === "Mentor" && (
         <Box p="1rem 0" textAlign="center">
           <Button onClick={handleClick}>Agendar una cita</Button>
         </Box>
-
-
       )}
-
-
-
-
     </WidgetWrapper>
   );
 };
