@@ -20,8 +20,11 @@ export const authSlice = createSlice({
       state.token = action.payload.token;
     },
     setLogout: (state) => {
+      state.mode = "light";
       state.user = null;
       state.token = null;
+      state.posts = [];
+      state.appointments = [];
     },
     setFriends: (state, action) => {
       if (state.user) {
@@ -41,13 +44,19 @@ export const authSlice = createSlice({
       state.posts = updatedPosts;
     },
 
-    setAppointments: (state, action) =>{
+    setAppointments: (state, action) => {
       state.appointments = action.payload.appointments;
-
     },
   },
 });
 
-export const { setMode, setLogin, setLogout, setFriends, setPosts, setPost, setAppointments} =
-  authSlice.actions;
+export const {
+  setMode,
+  setLogin,
+  setLogout,
+  setFriends,
+  setPosts,
+  setPost,
+  setAppointments,
+} = authSlice.actions;
 export default authSlice.reducer;
