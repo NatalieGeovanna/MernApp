@@ -108,7 +108,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
     }
 
     const savedUserResponse = await fetch(
-      "${process.env.REACT_APP_API_URL}/auth/register",
+      `${process.env.REACT_APP_API_URL}/auth/register`,
       {
         method: "POST",
         body: formData,
@@ -135,7 +135,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
 
   const login = async (values, onSubmitProps) => {
     const response = await fetch(
-      "${process.env.REACT_APP_API_URL}/auth/login",
+      `${process.env.REACT_APP_API_URL}/auth/login`,
       {
         method: "POST",
         headers: {
@@ -184,7 +184,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
 
   const handleResendVerification = async (email) => {
     const response = await fetch(
-      "${process.env.REACT_APP_API_URL}/auth/resend-verification",
+      `${process.env.REACT_APP_API_URL}/auth/resend-verification`,
       {
         method: "POST",
         headers: {

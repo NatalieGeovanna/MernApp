@@ -1,4 +1,4 @@
-import { Box, useMediaQuery, TextField, Button } from "@mui/material";
+import { Box, TextField, Button } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -15,7 +15,7 @@ const AppointmentForm = ({ users }) => {
 
   // Estado para el ID y el nombre del receptor
   const [receiverId, setReceiver] = useState("");
-  const [receiverName, setReceiverName] = useState("");
+  const [setReceiverName] = useState("");
 
   // Mensaje de respuesta
   const [message, setMessage] = useState("");
@@ -50,7 +50,7 @@ const AppointmentForm = ({ users }) => {
 
     try {
       const response = await fetch(
-        "${process.env.REACT_APP_API_URL}/appointments/check",
+        `${process.env.REACT_APP_API_URL}/appointments/check`,
         {
           method: "POST",
           headers: {
@@ -68,7 +68,7 @@ const AppointmentForm = ({ users }) => {
       }
 
       const createResponse = await fetch(
-        "${process.env.REACT_APP_API_URL}/appointments/create",
+        `${process.env.REACT_APP_API_URL}/appointments/create`,
         {
           method: "POST",
           headers: {
