@@ -22,7 +22,11 @@ export const createPost = async (req, res) => {
     });
     await newPost.save();
 
-    const posts = await Post.find({ userId }).sort({ createdAt: -1 });
+    const friendIds = [...user.friends, userId];
+
+    const posts = await Post.find({
+      userId: { $in: friendIds },
+    }).sort({ createdAt: -1 });
 
     res.status(201).json(posts);
   } catch (err) {

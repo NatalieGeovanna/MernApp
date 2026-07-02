@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Drawer } from "@mui/material";
 import {
   Box,
   IconButton,
@@ -80,7 +81,7 @@ const Navbar = () => {
     alignItems: "center",
     gap: "1rem",
     width: "100%",
-    padding: "0.9rem 1rem",
+    padding: "0.75rem 1rem",
     borderRadius: "12px",
     cursor: "pointer",
 
@@ -211,11 +212,11 @@ const Navbar = () => {
             <HomeOutlinedIcon sx={{ color: dark, fontSize: "25px" }} />
           </IconButton>
 
-          <IconButton>
+          {/* <IconButton>
             <NotificationsNoneOutlinedIcon
               sx={{ color: dark, fontSize: "25px" }}
             />
-          </IconButton>
+          </IconButton> */}
 
           <FlexBetween>
             <Box>
@@ -327,19 +328,20 @@ const Navbar = () => {
 
       {/* MOBILE NAV */}
       {!isNonMobileScreens && isMobileMenuToggled && (
-        <Box
-          position="fixed"
-          right={0}
-          top={0}
-          width={{
-            xs: "100%",
-            sm: "320px",
+        <Drawer
+          anchor="right"
+          open={isMobileMenuToggled}
+          onClose={() => setIsMobileMenuToggled(false)}
+          PaperProps={{
+            sx: {
+              width: {
+                xs: "85%",
+                sm: 320,
+              },
+              bgcolor: background,
+              p: 2,
+            },
           }}
-          maxWidth="85vw"
-          height="100vh"
-          bgcolor={background}
-          zIndex={1200}
-          overflowY="auto"
         >
           {/* CLOSE ICON */}
           <Box
@@ -348,21 +350,31 @@ const Navbar = () => {
             alignItems="center"
             p="1rem"
           >
-            <IconButton
-              size="small"
-              onClick={() => setIsMobileMenuToggled(false)}
-            >
-              <Close fontSize="small" />
+            <IconButton onClick={() => setIsMobileMenuToggled(true)}>
+              <MenuIcon />
             </IconButton>
           </Box>
 
           {/* MENU ITEMS */}
-          <FlexBetween display="flex" flexDirection="column" gap="3rem">
+          <Box display="flex" flexDirection="column" gap={1.5}>
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <UserImage image={user.picturePath} size="55px" />
+
+              <Box>
+                <Typography fontWeight={600}>{fullName}</Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  {user.rol}
+                </Typography>
+              </Box>
+            </Box>
             <FlexBetween
               backgroundColor={neutralLight}
-              borderRadius="9px"
-              gap="3rem"
-              padding="2px"
+              gap={1.2}
+              py={0.5}
+              px={1}
+              mb={2}
+              borderRadius="999px"
             >
               <InputBase
                 placeholder="Buscar a alguien..."
@@ -389,10 +401,10 @@ const Navbar = () => {
               <Typography>Calendario</Typography>
             </Box>
 
-            <Box sx={menuItemStyle}>
+            {/* <Box sx={menuItemStyle}>
               <NotificationsNoneOutlinedIcon />
               <Typography>Notificaciones</Typography>
-            </Box>
+            </Box> */}
 
             <Box sx={menuItemStyle} onClick={() => dispatch(setMode())}>
               {theme.palette.mode === "dark" ? <DarkMode /> : <LightMode />}
@@ -431,8 +443,8 @@ const Navbar = () => {
                 Cerrar sesión
               </Typography>
             </Box>
-          </FlexBetween>
-        </Box>
+          </Box>
+        </Drawer>
       )}
     </FlexBetween>
   );
