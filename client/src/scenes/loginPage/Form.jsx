@@ -93,8 +93,6 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const isLogin = pageType === "login";
   const isRegister = pageType === "register";
-  const theme = useTheme();
-  const neutralLight = theme.palette.neutral.light;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -110,13 +108,12 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
     }
 
     const savedUserResponse = await fetch(
-      "http://localhost:3001/auth/register",
+      "${process.env.REACT_APP_API_URL}/auth/register",
       {
         method: "POST",
         body: formData,
       },
     );
-    const savedUser = await savedUserResponse.json();
     onSubmitProps.resetForm();
 
     if (savedUserResponse.ok) {
@@ -137,13 +134,16 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
   };
 
   const login = async (values, onSubmitProps) => {
-    const response = await fetch("http://localhost:3001/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "${process.env.REACT_APP_API_URL}/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
       },
-      body: JSON.stringify(values),
-    });
+    );
 
     const data = await response.json();
 
@@ -184,7 +184,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
 
   const handleResendVerification = async (email) => {
     const response = await fetch(
-      "http://localhost:3001/auth/resend-verification",
+      "${process.env.REACT_APP_API_URL}/auth/resend-verification",
       {
         method: "POST",
         headers: {

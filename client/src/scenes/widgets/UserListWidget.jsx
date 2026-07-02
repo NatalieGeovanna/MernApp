@@ -1,44 +1,31 @@
-import {
-  Box,
-  Typography,
-  Divider,
-  useTheme,
-  Select,
-  MenuItem,
-} from "@mui/material";
-import UserImage from "components/UserImage";
-import FlexBetween from "components/FlexBetween";
+import { Box, Typography, Select, MenuItem } from "@mui/material";
+
 import WidgetWrapper from "components/WidgetWrapper";
 import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { blue } from "@mui/material/colors";
+import { useState, useEffect, useCallback } from "react";
 import UserCard from "./UserCard";
 
 const UserListWidget = ({ searchTerm }) => {
   const [users, setUsers] = useState([]);
-  const { palette } = useTheme();
-  const navigate = useNavigate();
   const token = useSelector((state) => state.token);
-  const dark = palette.neutral.dark;
-  const medium = palette.neutral.medium;
-  const main = palette.neutral.main;
   const currentUserId = useSelector((state) => state.user._id); // Obtener el userId del usuario logueado
   const [selectedRole, setSelectedRole] = useState(""); // Estado para el rol seleccionado
 
-  const getUsers = async () => {
-    const response = await fetch(`http://localhost:3001/users`, {
+  const getUsers = useCallback(async () => {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/users`, {
       method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const users = await response.json();
     setUsers(users);
-  };
+  }, [token]);
 
   useEffect(() => {
     getUsers();
-  }, []);
+  }, [getUsers]);
 
   // Manejar el cambio de selección del rol
   const handleRoleChange = (event) => {

@@ -1,10 +1,8 @@
 import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import Form from "./Form";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 const LoginPage = () => {
-  const navigate = useNavigate();
   const theme = useTheme();
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const [pageType, setPageType] = useState("login");

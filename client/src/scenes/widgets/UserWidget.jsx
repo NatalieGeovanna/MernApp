@@ -3,15 +3,14 @@ import {
   LocationOnOutlined,
   WorkOutlineOutlined,
   PersonOutlineOutlined,
-  ArticleOutlined,
 } from "@mui/icons-material";
 import { Box, Typography, Divider, useTheme, Button } from "@mui/material";
 import UserImage from "components/UserImage";
-import UserFile from "components/UserFile";
+// import UserFile from "components/UserFile";
 import FlexBetween from "components/FlexBetween";
 import WidgetWrapper from "components/WidgetWrapper";
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconButton } from "@mui/material";
 import { PersonAddOutlined, PersonRemoveOutlined } from "@mui/icons-material";
@@ -31,29 +30,31 @@ const UserWidget = ({ userId, picturePath, cvPath }) => {
   const isOwnProfile = currentUserId === userId;
   const loggedInUserFriends = useSelector((state) => state.user.friends);
 
-  const getUser = async () => {
-    const response = await fetch(`http://localhost:3001/users/${userId}`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  const getUser = useCallback(async () => {
+    const response = await fetch(
+      `${process.env.REACT_APP_API_URL}/users/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
     const data = await response.json();
     setUser(data);
-  };
+  }, [userId, token]);
 
   useEffect(() => {
     getUser();
-  }, [userId]);
+  }, [getUser]);
 
   if (!user) {
     return null;
   }
 
   const { firstName, lastName, location, occupation, rol } = user;
-  const profileFriendCount = user.friends.length;
   const isFriend = loggedInUserFriends.some((friend) => friend._id === userId);
-  console.log("loggedInUserFriends", loggedInUserFriends);
-  console.log(loggedInUserFriends.map((friend) => friend._id));
-  console.log("Perfil:", userId);
 
   const handleClick = () => {
     // Redirige a la página de citas con el `userId` como argumento
@@ -62,7 +63,7 @@ const UserWidget = ({ userId, picturePath, cvPath }) => {
 
   const patchFriend = async () => {
     const response = await fetch(
-      `http://localhost:3001/users/${_id}/${userId}`,
+      `${process.env.REACT_APP_API_URL}/users/${_id}/${userId}`,
       {
         method: "PATCH",
         headers: {

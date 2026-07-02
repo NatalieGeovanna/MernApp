@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   IconButton,
   InputBase,
   Typography,
-  Select,
-  FormControl,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
@@ -35,7 +33,6 @@ const Navbar = () => {
   const neutralLight = theme.palette.neutral.light;
   const dark = theme.palette.neutral.dark;
   const background = theme.palette.background.default;
-  const primaryLight = theme.palette.primary.light;
   const alt = theme.palette.background.alt;
 
   const fullName = `${user.firstName} `;
@@ -54,19 +51,21 @@ const Navbar = () => {
   const token = useSelector((state) => state.token);
   const [users, setUsers] = useState([]);
 
-  const getUsers = async () => {
-    const response = await fetch(`http://localhost:3001/users`, {
+  const getUsers = useCallback(async () => {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/users`, {
       method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const users = await response.json();
     setUsers(users);
-  };
+  }, [token]);
 
   useEffect(() => {
     getUsers();
-  }, []);
+  }, [getUsers]);
 
   const filteredUsers = users
     .filter((u) => u._id !== user._id)
