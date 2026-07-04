@@ -31,9 +31,9 @@ const ApointmentPage = () => {
     <Box>
       <Navbar />
       <AppointmentForm users={users} />
-      <Box p="1rem 0" textAlign="center">
+      {/* <Box p="1rem 0" textAlign="center">
         <Button onClick={() => navigate(`/encuesta`)}>Encuesta</Button>
-      </Box>
+      </Box> */}
     </Box>
   );
 };

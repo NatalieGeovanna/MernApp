@@ -1,4 +1,4 @@
-import { Box, TextField, Button } from "@mui/material";
+import { Box, TextField, Button, Snackbar, Alert } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -15,18 +15,21 @@ const AppointmentForm = ({ users }) => {
 
   // Estado para el ID y el nombre del receptor
   const [receiverId, setReceiver] = useState("");
-  const [setReceiverName] = useState("");
+  const [receiverName, setReceiverName] = useState("");
 
   // Mensaje de respuesta
   const [message, setMessage] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const receiverParam = queryParams.get("receiver");
+
     if (receiverParam) {
       setReceiver(receiverParam);
-      // Buscar el nombre del usuario correspondiente al `receiverId`
+
       const receiver = users.find((user) => user._id === receiverParam);
+
       if (receiver) {
         setReceiverName(receiver.firstName);
       }
@@ -36,19 +39,19 @@ const AppointmentForm = ({ users }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Obtener la fecha actual
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Asegurarse de que el tiempo esté a 00:00:00
+    today.setHours(0, 0, 0, 0);
 
-    // Convertir la fecha seleccionada a un objeto Date
     const selectedDate = new Date(date);
 
     if (selectedDate < today) {
-      setMessage("La fecha seleccionada no puede ser anterior al día de hoy.");
+      setMessage("La fecha seleccionada debe ser hoy o una fecha futura.");
+      setOpenSnackbar(true);
       return;
     }
 
     try {
+      // Verificar disponibilidad
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/appointments/check`,
         {
@@ -62,11 +65,16 @@ const AppointmentForm = ({ users }) => {
       );
 
       const data = await response.json();
+
       if (data.exists) {
-        setMessage("Ya existe una cita programada para esta fecha y hora.");
+        setMessage(
+          "Ya existe una cita programada para esa fecha y hora. Por favor, selecciona otro horario.",
+        );
+        setOpenSnackbar(true);
         return;
       }
 
+      // Crear cita
       const createResponse = await fetch(
         `${process.env.REACT_APP_API_URL}/appointments/create`,
         {
@@ -86,12 +94,39 @@ const AppointmentForm = ({ users }) => {
       );
 
       const createData = await createResponse.json();
-      setMessage(createData.message);
+
+      if (!createResponse.ok) {
+        throw new Error(createData.message);
+      }
+
+      setMessage(
+        "¡Tu cita fue agendada correctamente! Puedes consultar el recordatorio en la sección Mis citas.",
+      );
+
+      setOpenSnackbar(true);
+
+      // Limpiar formulario
+      setDate("");
+      setTime("");
+      setReason("");
+
+      // Mantener el mentor si llegó desde su perfil
+      const receiverParam = new URLSearchParams(window.location.search).get(
+        "receiver",
+      );
+
+      if (!receiverParam) {
+        setReceiver("");
+      }
     } catch (error) {
-      console.error("Error:", error);
-      setMessage("Hubo un error al crear la cita.");
+      console.error(error);
+
+      setMessage("Ocurrió un error al agendar la cita. Inténtalo nuevamente.");
+
+      setOpenSnackbar(true);
     }
   };
+
   return (
     <FlexBetween>
       <Box
@@ -180,8 +215,24 @@ const AppointmentForm = ({ users }) => {
             </Button>
           </form>
         </>
-        {message && <p>{message}</p>}
       </Box>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={5000}
+        onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setOpenSnackbar(false)}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
     </FlexBetween>
   );
 };
