@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { InputAdornment, IconButton } from "@mui/material";
 import LinearProgress from "@mui/material/LinearProgress";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
@@ -87,6 +87,7 @@ const initialValuesLogin = {
 };
 
 const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
+  const formikRef = useRef(null);
   const { palette } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -212,18 +213,44 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
   };
 
   const wizardButtonStyle = {
-    minWidth: "120px",
-    height: "46px",
-    borderRadius: "999px",
+    mt: 2,
+    p: "1rem",
+    borderRadius: "12px",
     textTransform: "none",
     fontWeight: 600,
-    fontSize: "0.95rem",
+    backgroundColor: palette.primary.main,
+    color: "#fff",
+    boxShadow: "none",
     transition: "all .2s ease",
+
+    "&:hover": {
+      backgroundColor: palette.primary.dark,
+      transform: "translateY(-2px)",
+      boxShadow: "0 8px 20px rgba(25,118,210,.25)",
+    },
+
+    "&:active": {
+      transform: "translateY(0)",
+      boxShadow: "0 3px 10px rgba(25,118,210,.18)",
+    },
+  };
+
+  const fillDemoAccount = () => {
+    setPageType("login");
+
+    setTimeout(() => {
+      formikRef.current?.setValues({
+        ...formikRef.current.values,
+        email: "demo@mentify.com",
+        password: "Mentify123!",
+      });
+    }, 0);
   };
 
   return (
     <Box>
       <Formik
+        innerRef={formikRef}
         key={pageType}
         enableReinitialize
         initialValues={isLogin ? initialValuesLogin : initialValuesRegister}
@@ -306,6 +333,21 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
               >
                 {isLogin && (
                   <>
+                    <Box>
+                      <Button
+                        v
+                        variant="contained"
+                        fullWidth
+                        startIcon={
+                          <RocketLaunchOutlinedIcon sx={{ color: "#fff" }} />
+                        }
+                        onClick={fillDemoAccount}
+                        sx={wizardButtonStyle}
+                      >
+                        Usa la Cuenta Demo
+                      </Button>
+                    </Box>
+
                     <TextField
                       label="Correo electrónico"
                       name="email"
@@ -941,16 +983,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
                         <Button
                           variant="outlined"
                           onClick={previousStep}
-                          sx={{
-                            ...wizardButtonStyle,
-                            borderColor: palette.primary.main,
-                            color: palette.primary.main,
-
-                            "&:hover": {
-                              backgroundColor: palette.primary.light + "15",
-                              borderColor: palette.primary.main,
-                            },
-                          }}
+                          sx={wizardButtonStyle}
                         >
                           Atrás
                         </Button>
@@ -1011,23 +1044,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
                               }
                             }
                           }}
-                          sx={{
-                            ...wizardButtonStyle,
-                            backgroundColor: palette.primary.main,
-                            color: "#fff",
-                            boxShadow: "none",
-
-                            "&:hover": {
-                              backgroundColor: palette.primary.main,
-                              transform: "translateY(-1px)",
-                              boxShadow: "0 8px 24px rgba(25,118,210,.25)",
-                            },
-
-                            "&:active": {
-                              transform: "translateY(0)",
-                              boxShadow: "0 3px 10px rgba(25,118,210,.18)",
-                            },
-                          }}
+                          sx={wizardButtonStyle}
                         >
                           Siguiente
                         </Button>
@@ -1035,39 +1052,14 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
                         <Button
                           variant="contained"
                           type="submit"
-                          sx={{
-                            ...wizardButtonStyle,
-                            backgroundColor: palette.primary.main,
-                            color: "#fff",
-                            boxShadow: "none",
-
-                            "&:hover": {
-                              backgroundColor: palette.primary.main,
-                              transform: "translateY(-1px)",
-                              boxShadow: "0 8px 24px rgba(25,118,210,.25)",
-                            },
-
-                            "&:active": {
-                              transform: "translateY(0)",
-                              boxShadow: "0 3px 10px rgba(25,118,210,.18)",
-                            },
-                          }}
+                          sx={wizardButtonStyle}
                         >
                           Crear cuenta
                         </Button>
                       )}
                     </Box>
                   ) : (
-                    <Button
-                      fullWidth
-                      type="submit"
-                      sx={{
-                        mt: 2,
-                        p: "1rem",
-                        backgroundColor: palette.primary.main,
-                        color: palette.background.alt,
-                      }}
-                    >
+                    <Button fullWidth type="submit" sx={wizardButtonStyle}>
                       Iniciar sesión
                     </Button>
                   )}
@@ -1098,6 +1090,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
                       </Alert>
                     )}
                 </Box>
+
                 <Typography
                   onClick={() => {
                     setPageType(isLogin ? "register" : "login");
