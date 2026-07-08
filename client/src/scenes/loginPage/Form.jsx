@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { InputAdornment, IconButton } from "@mui/material";
 import LinearProgress from "@mui/material/LinearProgress";
+import CircularProgress from "@mui/material/CircularProgress";
 import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlined from "@mui/icons-material/VisibilityOffOutlined";
 import {
@@ -87,6 +88,7 @@ const initialValuesLogin = {
 };
 
 const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
+  const [loading, setLoading] = useState(false);
   const formikRef = useRef(null);
   const { palette } = useTheme();
   const dispatch = useDispatch();
@@ -179,8 +181,19 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
   };
 
   const handleFormSubmit = async (values, onSubmitProps) => {
-    if (isLogin) await login(values, onSubmitProps);
-    if (isRegister) await register(values, onSubmitProps);
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        await login(values, onSubmitProps);
+      }
+
+      if (isRegister) {
+        await register(values, onSubmitProps);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResendVerification = async (email) => {
@@ -333,11 +346,14 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
               >
                 {isLogin && (
                   <>
-                    <Box>
+                    <Box sx={{ gridColumn: "span 4" }}>
+                      <Typography color={`#808080`}>
+                        Explora mentify usando la cuenta demo pulsando el boton
+                        "Usa Cuenta Demo" o crea tu propia cuenta para vivir la
+                        experiencia completa.
+                      </Typography>
                       <Button
-                        v
                         variant="contained"
-                        fullWidth
                         startIcon={
                           <RocketLaunchOutlinedIcon sx={{ color: "#fff" }} />
                         }
@@ -1054,13 +1070,33 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
                           type="submit"
                           sx={wizardButtonStyle}
                         >
-                          Crear cuenta
+                          {loading ? (
+                            <>
+                              <CircularProgress
+                                size={18}
+                                sx={{ color: "#fff", mr: 1 }}
+                              />
+                              Creando cuenta...
+                            </>
+                          ) : (
+                            "Crear cuenta"
+                          )}
                         </Button>
                       )}
                     </Box>
                   ) : (
                     <Button fullWidth type="submit" sx={wizardButtonStyle}>
-                      Iniciar sesión
+                      {loading ? (
+                        <>
+                          <CircularProgress
+                            size={18}
+                            sx={{ color: "#fff", mr: 1 }}
+                          />
+                          Iniciando sesión...
+                        </>
+                      ) : (
+                        "Iniciar sesión"
+                      )}
                     </Button>
                   )}
                   {process.env.REACT_APP_EMAIL_VERIFICATION === "true" &&
