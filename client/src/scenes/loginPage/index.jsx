@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const LoginPage = () => {
   const theme = useTheme();
-  const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
+  const isDesktop = useMediaQuery("(min-width:1280px)");
   const [pageType, setPageType] = useState("login");
   const [activeStep, setActiveStep] = useState(1);
 
@@ -14,7 +14,7 @@ const LoginPage = () => {
         width="100%"
         backgroundColor={theme.palette.background.alt}
         p="1rem 6%"
-        textAlign="center"
+        textAlign="left"
       >
         <Box
           onClick={() => {
@@ -25,7 +25,6 @@ const LoginPage = () => {
             display: "inline-block",
             cursor: "pointer",
             transition: "0.2s",
-
             "&:hover": {
               transform: "scale(1.03)",
               opacity: 0.9,
@@ -39,19 +38,30 @@ const LoginPage = () => {
       </Box>
 
       <Box
-        width={isNonMobileScreens ? "50%" : "93%"}
-        p="2rem"
-        m="2rem auto"
-        borderRadius="1.5rem"
-        backgroundColor={theme.palette.background.alt}
+        sx={{
+          width: "100%",
+          maxWidth: isDesktop ? 1280 : 560,
+          mx: "auto",
+          my: { xs: 2, lg: 4 },
+          px: { xs: 2, sm: 3, lg: 4 },
+          py: isDesktop ? 0 : 3,
+          borderRadius: isDesktop ? 0 : "1.5rem",
+          backgroundColor: isDesktop
+            ? "transparent"
+            : theme.palette.background.alt,
+          boxSizing: "border-box",
+        }}
       >
-        <Typography
-          fontWeight="500"
-          variant="h5"
-          sx={{ mb: "1.5rem", textAlign: "center" }}
-        >
-          Conecta con mentores y emprendedores de toda Colombia
-        </Typography>
+        {!isDesktop && (
+          <Typography
+            fontWeight="500"
+            variant="h5"
+            sx={{ mb: "1.5rem", textAlign: "center" }}
+          >
+            Conecta con mentores y emprendedores de toda Colombia
+          </Typography>
+        )}
+
         <Form
           pageType={pageType}
           setPageType={setPageType}

@@ -94,6 +94,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  const isDesktop = useMediaQuery("(min-width:1280px)");
   const isLogin = pageType === "login";
   const isRegister = pageType === "register";
   const [showPassword, setShowPassword] = useState(false);
@@ -260,7 +261,7 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
     }, 0);
   };
 
-  return (
+  const formContent = (
     <Box>
       <Formik
         innerRef={formikRef}
@@ -1178,6 +1179,90 @@ const Form = ({ pageType, setPageType, activeStep, setActiveStep }) => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+    </Box>
+  );
+
+  if (!isDesktop) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 560,
+          mx: "auto",
+          px: { xs: 2, sm: 3 },
+        }}
+      >
+        {formContent}
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: 620,
+        p: { lg: "3rem", xl: "3.5rem" },
+        borderRadius: "28px",
+        bgcolor: palette.background.alt,
+        display: "grid",
+        gridTemplateColumns: "minmax(380px, 480px) minmax(560px, 640px)",
+        gap: { lg: 5, xl: 7 },
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+      }}
+    >
+      <Box
+        sx={{
+          minWidth: 0,
+          maxWidth: 480,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          alignSelf: "start",
+          pt: { lg: 8, xl: 10 },
+        }}
+      >
+        <Typography variant="accent" lineHeight={1.1} mb={3}>
+          {isLogin
+            ? "La red social para mentores y emprendedores."
+            : "Crea una cuenta e impulsa tu crecimiento."}
+        </Typography>
+
+        <Typography
+          color={palette.neutral.mediumMain}
+          fontSize="1.05rem"
+          lineHeight={1.8}
+          mb={4}
+        >
+          {isLogin
+            ? "Conecta con profesionales, comparte conocimiento, agenda mentorías y haz crecer tu red profesional desde un solo lugar."
+            : "Únete a una comunidad donde mentores y emprendedores colaboran, aprenden y construyen oportunidades juntos."}
+        </Typography>
+
+        <Box display="flex" flexDirection="column" gap={2}>
+          <Typography>✓ Encuentra mentores</Typography>
+          <Typography>✓ Comparte publicaciones</Typography>
+          <Typography>✓ Agenda mentorías</Typography>
+          <Typography>✓ Amplía tu red profesional</Typography>
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
+          width: "100%",
+          minWidth: 0,
+          maxWidth: 640,
+          p: { lg: "2rem", xl: "2.5rem" },
+          borderRadius: "24px",
+          bgcolor: palette.background.alt,
+          boxShadow: "0 20px 50px rgba(0,0,0,.08)",
+          boxSizing: "border-box",
+        }}
+      >
+        {formContent}
+      </Box>
     </Box>
   );
 };
