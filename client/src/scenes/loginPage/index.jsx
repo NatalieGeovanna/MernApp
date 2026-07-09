@@ -1,40 +1,84 @@
 import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import Form from "./Form";
 import { useState } from "react";
+import { Button } from "@mui/material";
 
 const LoginPage = () => {
   const theme = useTheme();
   const isDesktop = useMediaQuery("(min-width:1280px)");
   const [pageType, setPageType] = useState("login");
   const [activeStep, setActiveStep] = useState(1);
+  const { palette } = useTheme();
+
+  const wizardButtonStyle = {
+    mt: 2,
+    p: "1rem",
+    borderRadius: "12px",
+    textTransform: "none",
+    fontWeight: 600,
+    backgroundColor: palette.primary.main,
+    color: "#fff",
+    boxShadow: "none",
+    transition: "all .2s ease",
+
+    "&:hover": {
+      backgroundColor: palette.primary.dark,
+      transform: "translateY(-2px)",
+      boxShadow: "0 8px 20px rgba(25,118,210,.25)",
+    },
+
+    "&:active": {
+      transform: "translateY(0)",
+      boxShadow: "0 3px 10px rgba(25,118,210,.18)",
+    },
+  };
 
   return (
     <Box>
       <Box
         width="100%"
         backgroundColor={theme.palette.background.alt}
-        p="1rem 6%"
-        textAlign="left"
+        px="6%"
+        py="1rem"
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
       >
-        <Box
+        <Typography
+          fontWeight="bold"
+          fontSize="32px"
+          color="primary"
+          sx={{
+            cursor: "pointer",
+            "&:hover": {
+              opacity: 0.9,
+            },
+          }}
           onClick={() => {
             setPageType("login");
             setActiveStep(1);
           }}
-          sx={{
-            display: "inline-block",
-            cursor: "pointer",
-            transition: "0.2s",
-            "&:hover": {
-              transform: "scale(1.03)",
-              opacity: 0.9,
-            },
-          }}
         >
-          <Typography fontWeight="bold" fontSize="32px" color="primary">
-            Mentify
-          </Typography>
-        </Box>
+          Mentify
+        </Typography>
+
+        {isDesktop && (
+          <Button
+            variant="contained"
+            disableElevation
+            onClick={() => {
+              if (pageType === "login") {
+                setPageType("register");
+              } else {
+                setPageType("login");
+              }
+              setActiveStep(1);
+            }}
+            sx={wizardButtonStyle}
+          >
+            {pageType === "login" ? "Crear cuenta" : "Iniciar sesión"}
+          </Button>
+        )}
       </Box>
 
       <Box
