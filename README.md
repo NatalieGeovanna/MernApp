@@ -1,92 +1,127 @@
-Mentorship Social Network
+# Mentify
 
-Plataforma web tipo red social orientada a la conexión entre emprendedores y mentores, diseñada para fomentar el intercambio de conocimiento, el networking y el crecimiento profesional dentro de una comunidad digital.
+Mentify is a mentorship platform that connects entrepreneurs with experienced mentors, making it easier to build professional relationships, exchange knowledge, and schedule one-on-one mentoring sessions through a modern and intuitive digital experience.
 
-Descripción general
+## Overview
 
-La aplicación permite a los usuarios crear publicaciones, interactuar mediante comentarios y reacciones, y establecer conexiones con otros usuarios. El objetivo principal es facilitar espacios de mentoría donde emprendedores puedan recibir orientación y mentores puedan compartir su experiencia.
-El proyecto está desarrollado utilizando el stack MERN (MongoDB, Express, React y Node.js), bajo una arquitectura cliente-servidor basada en una API REST.
+Mentify was designed to foster meaningful professional connections by providing a centralized space where entrepreneurs can discover mentors, explore their expertise, book mentoring sessions, and engage with the community through posts and discussions.
 
-Tecnologías utilizadas
+The project follows the MERN architecture (MongoDB, Express, React, and Node.js) and is built as a responsive Single Page Application with a RESTful API.
 
-Frontend: React
-Backend: Node.js, Express
-Base de datos: MongoDB
-Autenticación: JSON Web Tokens (JWT)
-Arquitectura: API REST
-Interfaz: SPA con diseño responsivo
-Temas: Modo claro y modo oscuro
+## Features
 
-Funcionalidades principales
+- Secure user authentication
+- User profile management
+- Mentor and entrepreneur profiles
+- Social feed with posts and interactions
+- Comments and reactions
+- Mentor discovery
+- Mentorship session booking
+- Responsive design
+- Light and dark mode
 
-Registro e inicio de sesión de usuarios con autenticación basada en JWT
-Gestión de perfiles de usuario
-Creación, visualización e interacción con publicaciones
-Comentarios y reacciones entre usuarios
-Conexión entre emprendedores y mentores
-Interfaz responsiva con soporte para modo claro y oscuro
-Arquitectura del sistema
-Frontend desarrollado como Single Page Application (SPA) en React
-Backend en Node.js y Express encargado de la lógica de negocio y seguridad
-Persistencia de datos gestionada mediante MongoDB
+## Tech Stack
 
-Estado del proyecto
+### Frontend
+- React
+- JavaScript
+- Material UI
+- Redux Toolkit
 
-MVP funcional en desarrollo.
-Posibles mejoras futuras:
-Sistema de roles (mentor / emprendedor)
-Sistema de solicitudes de mentoría
-Notificaciones
-Búsqueda y filtrado avanzado de usuarios
+### Backend
+- Node.js
+- Express.js
+- REST API
 
-📄 README – English Version
+### Database
+- MongoDB
+- Mongoose
 
-Mentorship Social Network
+### Authentication
+- JSON Web Tokens (JWT)
 
-Web-based social network platform focused on connecting entrepreneurs and mentors, designed to promote knowledge sharing, professional networking, and collaborative growth within a digital community.
+## My Role
 
-Overview
+I designed and developed the frontend interface, implemented reusable React components, integrated REST APIs, and collaborated on backend functionality. 
+I focused on creating an intuitive user experience while ensuring responsiveness, scalability, and clean component architecture.
 
-The application allows users to create posts, interact through comments and reactions, and connect with other users. Its main goal is to provide mentorship-oriented spaces where entrepreneurs can receive guidance and mentors can share their experience.
-The project is built using the MERN stack (MongoDB, Express, React, and Node.js), following a client-server architecture based on a RESTful API.
+## Challenges
 
-Technologies
+- Designing a social platform tailored to mentorship.
+- Building reusable UI components.
+- Managing authentication and protected routes.
+- Structuring scalable frontend architecture.
+- Creating responsive layouts for multiple devices.
 
-Frontend: React
-Backend: Node.js, Express
-Database: MongoDB
-Authentication: JSON Web Tokens (JWT)
-Architecture: REST API
-Interface: Responsive SPA
-Themes: Light mode and Dark mode
+## What I Learned
 
-Key Features
+- Building a full-stack MERN application.
+- Designing scalable React applications.
+- Implementing JWT authentication.
+- Managing global state with Redux Toolkit.
+- Developing RESTful APIs and integrating frontend with backend services.
 
-User registration and login with JWT-based authentication
-User profile management
-Post creation and interaction
-Comments and reactions between users
-Mentor and entrepreneur connections
-Responsive interface with light and dark mode support
-System Architecture
-Frontend implemented as a React Single Page Application (SPA)
-Backend built with Node.js and Express handling business logic and security
-Data persistence managed with MongoDB
-Project Status
-Functional MVP under development.
+## Future Improvements
 
-Planned improvements:
+- Mentor reviews and ratings
+- Advanced search and filtering
+- Session reminders
+- Calendar integration
 
-Role-based system (mentor / entrepreneur)
-Mentorship request workflow
-Notifications
-Advanced user search and filtering
+## Project Status
 
-<img width="1916" height="861" alt="MernAppLogin" src="https://github.com/user-attachments/assets/a06d68ff-4216-43f1-a866-d5ea2350124f" />
-<img width="1901" height="867" alt="MernAppInicio" src="https://github.com/user-attachments/assets/db9c05cd-65ab-42f1-bce4-05164faed0ad" />
-<img width="1898" height="872" alt="MernAppFeed" src="https://github.com/user-attachments/assets/61ff2a4a-6dbe-4c46-89ba-a2bccf7633ac" />
-<img width="1903" height="855" alt="MernAppSearch" src="https://github.com/user-attachments/assets/eee4eca0-3c79-40cc-8e1f-3e29c4fb257f" />
-<img width="1902" height="862" alt="MernAppProfile" src="https://github.com/user-attachments/assets/42955372-1004-46ae-99ce-413596deda80" />
-<img width="1916" height="867" alt="MernAppProfileLight" src="https://github.com/user-attachments/assets/a3d11eda-f3b8-48b9-b4e7-2e75b9ebdec0" />
-<img width="1881" height="862" alt="MernAppSchedule" src="https://github.com/user-attachments/assets/622b75c4-f50f-4b45-b1ff-4895a00b1877" />
-<img width="1903" height="873" alt="MernAppMySchedule" src="https://github.com/user-attachments/assets/aab978e5-ed9c-4155-984a-d0102b2c458b" />
+Functional MVP under continuous development.
+
+## Getting Started
+
+Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/mentify.git
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+---
+
+## Live Demo
+
+🔗 **Vercel:** https://mern-app-seven-theta.vercel.app/
+
+---
+
+## Author
+
+**Natalie Geovanna**
+
+- 💼 LinkedIn: https://www.linkedin.com/in/natalie-cabezas/
+- 🌐 Portfolio: https://nataliecabezas.framer.website/
+
+---
+
+## License
+
+This project is intended for educational and portfolio purposes.
+
+<img width="1912" height="941" alt="Screenshot 2026-07-15 170221" src="https://github.com/user-attachments/assets/def5ee6d-505e-4d8d-9973-6eb9e9f02cb2" />
+<img width="1917" height="942" alt="Screenshot 2026-07-15 170206" src="https://github.com/user-attachments/assets/afb73840-a36d-4027-900e-aaca1c6e2ba2" />
+<img width="1906" height="945" alt="Screenshot 2026-07-15 165925" src="https://github.com/user-attachments/assets/84555d03-4e5b-44ea-94a7-dac45d1d860f" />
+<img width="1902" height="942" alt="Screenshot 2026-07-15 165816" src="https://github.com/user-attachments/assets/2ca29493-08b7-41a3-88aa-b620d0f2229d" />
+<img width="1917" height="946" alt="Screenshot 2026-07-15 165749" src="https://github.com/user-attachments/assets/c4b05ba3-ec1e-49ca-ab50-aa0e72e08325" />
+<img width="1917" height="942" alt="Screenshot 2026-07-15 165955" src="https://github.com/user-attachments/assets/4d44abdc-f3ac-45fe-accc-3112cb75ac27" />
+<img width="1917" height="942" alt="Screenshot 2026-07-15 170105" src="https://github.com/user-attachments/assets/b40341e1-c6e9-4cb3-8ae7-30d333725836" />
+
+
+
+
+
